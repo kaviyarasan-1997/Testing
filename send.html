@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Secret Message</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #000; display: flex; align-items: center; justify-content: center; height: 100vh; color: #fff; }
+        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); padding: 40px 20px; border-radius: 30px; width: 90%; max-width: 360px; text-align: center; border: 1px solid rgba(255,255,255,0.2); }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #ff0050; margin-top: -80px; background: #222; }
+        textarea { width: 100%; height: 120px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 15px; border-radius: 15px; margin: 20px 0; outline: none; resize: none; box-sizing: border-box; }
+        button { background: linear-gradient(to right, #ff006e, #3a86ff); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img id="p-img" class="profile-img" src="">
+        <h2 id="user-display">@Loading...</h2>
+        <textarea id="message" placeholder="எனக்குத் தெரியாமல் ஏதாவது சொல்லுங்கள்..."></textarea>
+        <button onclick="sendNGL()">SEND NOW 🚀</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q",
+            databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const params = new URLSearchParams(window.location.search);
+        const user = params.get('u') || "Anonymous";
+        
+        document.getElementById('user-display').innerText = "@" + user;
+        document.getElementById('p-img').src = `https://unavatar.io/instagram/${user}`;
+
+        function sendNGL() {
+            const msg = document.getElementById('message').value.trim();
+            if(msg) {
+                // அந்தந்த யூசருக்கான தனி போல்டரில் சேமிக்கும்
+                db.ref('users/' + user + '/messages').push({
+                    text: msg,
+                    timestamp: Date.now()
+                }).then(() => {
+                    confetti();
+                    alert("Message Sent! ✅");
+                    document.getElementById('message').value = "";
+                });
+            }
+        }
+    </script>
+</body>
+</html>
