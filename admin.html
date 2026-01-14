@@ -7,47 +7,46 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto 30px; }
-        .card { background: linear-gradient(135deg, #ff0050 0%, #ff00c8 100%); border-radius: 25px; padding: 25px; margin: 15px auto; max-width: 500px; position: relative; animation: slideUp 0.4s ease; box-shadow: 0 10px 20px rgba(255,0,80,0.3); }
-        .msg { font-size: 1.3rem; font-weight: bold; line-height: 1.4; margin-bottom: 10px; }
-        .time { font-size: 0.7rem; opacity: 0.8; }
-        .del-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: white; padding: 5px 10px; border-radius: 10px; cursor: pointer; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto 30px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .card { background: linear-gradient(135deg, #ff0050 0%, #90278e 100%); border-radius: 25px; padding: 20px; margin: 15px auto; max-width: 500px; position: relative; animation: slideIn 0.4s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .msg { font-size: 1.3rem; font-weight: bold; line-height: 1.4; color: #fff; }
+        .time { font-size: 0.75rem; opacity: 0.8; margin-top: 15px; display: block; }
+        .del-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: white; padding: 7px 12px; border-radius: 12px; cursor: pointer; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
     <div class="header">
         <h2 id="title">Inbox</h2>
-        <a href="index.html" style="color: #0095f6; text-decoration: none; font-weight: bold;">Logout</a>
+        <a href="index.html" style="color: #0095f6; text-decoration: none; font-weight: bold;">New Link</a>
     </div>
     <div id="list"></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q", databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
         const user = new URLSearchParams(window.location.search).get('u');
 
         if(user) {
             document.getElementById('title').innerText = `@${user} Inbox`;
-            db.ref('users/'+user+'/messages').on('value', snap => {
+            firebase.database().ref('users/'+user+'/messages').orderByChild('timestamp').on('value', snap => {
                 const list = document.getElementById('list');
                 list.innerHTML = "";
                 const data = snap.val();
                 if(data) {
                     Object.keys(data).reverse().forEach(k => {
-                        const date = new Date(data[k].timestamp).toLocaleString();
+                        const date = data[k].timestamp ? new Date(data[k].timestamp).toLocaleString() : "Just now";
                         list.innerHTML += `<div class="card">
                             <button class="del-btn" onclick="deleteMsg('${k}')">✕</button>
                             <div class="msg">"${data[k].text}"</div>
-                            <div class="time">${date}</div>
+                            <span class="time">🕒 ${date}</span>
                         </div>`;
                     });
-                } else { list.innerHTML = "<p align='center'>No messages yet.</p>"; }
+                } else { list.innerHTML = "<p align='center' style='color:#666;'>No messages yet.</p>"; }
             });
         }
-        function deleteMsg(k) { if(confirm("Delete?")) db.ref('users/'+user+'/messages/'+k).remove(); }
+        function deleteMsg(k) { if(confirm("Delete this message?")) firebase.database().ref('users/'+user+'/messages/'+k).remove(); }
     </script>
 </body>
 </html>
