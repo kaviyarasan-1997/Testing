@@ -3,34 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Secret Message</title>
+    <title>Send Message</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #000; display: flex; align-items: center; justify-content: center; height: 100vh; color: #fff; }
-        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); padding: 40px 20px; border-radius: 30px; width: 90%; max-width: 360px; text-align: center; border: 1px solid rgba(255,255,255,0.2); }
-        .profile-img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff0050; margin-bottom: 10px; background: #222; }
-        textarea { width: 100%; height: 120px; background: rgba(255,255,255,0.05); border: 1px solid #444; color: white; padding: 15px; border-radius: 15px; margin: 20px 0; outline: none; resize: none; box-sizing: border-box; }
-        button { background: linear-gradient(to right, #ff006e, #3a86ff); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; }
+        body { margin: 0; font-family: sans-serif; background: #000; display: flex; align-items: center; justify-content: center; height: 100vh; color: #fff; overflow: hidden; }
+        .bg-glow { position: absolute; width: 300px; height: 300px; background: #ff0050; filter: blur(120px); opacity: 0.3; z-index: -1; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); padding: 40px 25px; border-radius: 35px; width: 90%; max-width: 380px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .profile-img { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ff0050; margin-top: -85px; background: #111; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        h2 { margin: 15px 0 5px; font-size: 22px; }
+        textarea { width: 100%; height: 150px; background: rgba(0,0,0,0.2); border: 1px solid #333; color: white; padding: 20px; border-radius: 20px; margin: 20px 0; outline: none; resize: none; box-sizing: border-box; font-size: 16px; }
+        textarea:focus { border-color: #ff0050; }
+        button { background: #fff; color: #000; border: none; padding: 18px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
+    <div class="bg-glow"></div>
     <div class="card">
-        <img id="p-img" class="profile-img" src="https://via.placeholder.com/80">
+        <img id="p-img" class="profile-img" src="">
         <h2 id="user-display">@Loading...</h2>
-        <textarea id="message" placeholder="எனக்குத் தெரியாமல் ஏதாவது சொல்லுங்கள்..."></textarea>
+        <p style="color:#aaa; font-size: 14px;">ரகசியமாக ஏதேனும் சொல்லுங்கள்...</p>
+        <textarea id="message" placeholder="Type your secret message here..."></textarea>
         <button onclick="sendNGL()">SEND NOW 🚀</button>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q",
-            databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q", databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
         const params = new URLSearchParams(window.location.search);
         const user = params.get('u') || "Anonymous";
         
@@ -40,18 +41,8 @@
         function sendNGL() {
             const msg = document.getElementById('message').value.trim();
             if(msg) {
-                db.ref('users/' + user + '/messages').push({
-                    text: msg,
-                    timestamp: Date.now()
-                }).then(() => {
-                    confetti();
-                    alert("Message Sent! ✅");
-                    document.getElementById('message').value = "";
-                }).catch(err => {
-                    alert("Error: " + err.message);
-                });
-            } else {
-                alert("Please type something!");
+                firebase.database().ref('users/' + user + '/messages').push({ text: msg, timestamp: Date.now() })
+                .then(() => { confetti(); alert("Sent! ✅"); document.getElementById('message').value = ""; });
             }
         }
     </script>
