@@ -19,34 +19,55 @@
 <body>
     <div class="header">
         <h2 id="title">Inbox</h2>
-        <a href="index.html" style="color: #0095f6; text-decoration: none; font-weight: bold;">New Link</a>
+        <a href="index.html" style="color: #0095f6; text-decoration: none; font-weight: bold;">Logout</a>
     </div>
     <div id="list"></div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q", databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBLyf_dz6xPC9wdthZSVtpatkc8JgFhE4Q", 
+            databaseURL: "https://chatbox-chats-default-rtdb.firebaseio.com" 
+        };
+        
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const user = new URLSearchParams(window.location.search).get('u');
+        const db = firebase.database();
 
-        if(user) {
-            document.getElementById('title').innerText = `@${user} Inbox`;
-            firebase.database().ref('users/'+user+'/messages').orderByChild('timestamp').on('value', snap => {
+        const params = new URLSearchParams(window.location.search);
+        const rawUser = params.get('u');
+        
+        // முக்கியமான மாற்றம்: send.html-ல் செய்தது போலவே இங்கும் ஸ்பெஷல் கேரக்டர்களை நீக்குகிறோம்
+        const safeUser = rawUser ? rawUser.replace(/[.$#[\]/]/g, "") : null;
+
+        if(safeUser) {
+            document.getElementById('title').innerText = `@${rawUser} Inbox`;
+            
+            // SafeUser பாதையில் உள்ள மெசேஜ்களை எடுக்கிறோம்
+            db.ref('users/' + safeUser + '/messages').orderByChild('timestamp').on('value', snap => {
                 const list = document.getElementById('list');
                 list.innerHTML = "";
                 const data = snap.val();
+                
                 if(data) {
                     Object.keys(data).reverse().forEach(k => {
                         const date = data[k].timestamp ? new Date(data[k].timestamp).toLocaleString() : "Just now";
-                        list.innerHTML += `<div class="card">
-                            <button class="del-btn" onclick="deleteMsg('${k}')">✕</button>
-                            <div class="msg">"${data[k].text}"</div>
-                            <span class="time">🕒 ${date}</span>
-                        </div>`;
+                        list.innerHTML += `
+                            <div class="card">
+                                <button class="del-btn" onclick="deleteMsg('${k}')">✕</button>
+                                <div class="msg">"${data[k].text}"</div>
+                                <span class="time">🕒 ${date}</span>
+                            </div>`;
                     });
-                } else { list.innerHTML = "<p align='center' style='color:#666;'>No messages yet.</p>"; }
+                } else { 
+                    list.innerHTML = "<p align='center' style='color:#666;'>No messages yet.</p>"; 
+                }
             });
         }
-        function deleteMsg(k) { if(confirm("Delete this message?")) firebase.database().ref('users/'+user+'/messages/'+k).remove(); }
+
+        function deleteMsg(k) { 
+            if(confirm("Delete this message?")) {
+                db.ref('users/' + safeUser + '/messages/' + k).remove(); 
+            }
+        }
     </script>
 </body>
 </html>
